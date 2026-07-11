@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name         武大课程成绩导出
+// @name         WHU发展系统课程成绩导出——by S0ren
 // @namespace    local.whu-grade-export
 // @version      2.2.0
 // @description  自动收集课程成绩并导出 HTML
