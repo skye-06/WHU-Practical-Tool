@@ -1,1 +1,1 @@
-# WHU-Practical-Tool-Development
+# WHU-Practical-Tool
