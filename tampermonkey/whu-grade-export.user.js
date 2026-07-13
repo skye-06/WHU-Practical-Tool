@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WHU发展系统课程成绩导出——by S0ren
 // @namespace    local.whu-grade-export
-// @version      2.2.0
+// @version      2.3.0
 // @description  自动收集课程成绩并导出 HTML
 // @match        http://zyfzzd.whu.edu.cn/xshx/*
 // @run-at       document-start
@@ -10,14 +10,6 @@
 
 (() => {
   const ENDPOINT = "/api/cjxx/queryPage";
-  const TERMS = [
-    "2024-2025学年第一学期",
-    "2024-2025学年第二学期",
-    "2024-2025学年第三学期",
-    "2025-2026学年第一学期",
-    "2025-2026学年第二学期",
-  ];
-  const TERM_INDEX = new Map(TERMS.map((term, index) => [term, index]));
   const SEMESTERS = { 1: "第一", 2: "第二", 3: "第三" };
   const collator = new Intl.Collator("zh-Hans-CN", { numeric: true });
   const state = { records: new Map(), pages: new Set(), total: 0, pageCount: 0, waitingFor: 0, complete: false, timer: 0 };
@@ -43,6 +35,8 @@
   function normalize(row) {
     return {
       term: termOf(row),
+      year: Number(row.xn),
+      semester: Number(row.xqm),
       category: text(row.kcxzmc),
       course: text(row.kcmc),
       grade: text(row.kccj),
@@ -53,8 +47,9 @@
   }
 
   function ordered(rows) {
-    return rows.filter((row) => TERM_INDEX.has(row.term) && row.course && row.grade).sort((a, b) =>
-      TERM_INDEX.get(a.term) - TERM_INDEX.get(b.term)
+    return rows.filter((row) => row.term && row.course && row.grade).sort((a, b) =>
+      a.year - b.year
+      || a.semester - b.semester
       || collator.compare(a.category, b.category)
       || collator.compare(a.course, b.course)
       || collator.compare(a.teacher, b.teacher));
@@ -62,7 +57,8 @@
 
   function reportHtml(rows) {
     const prepared = ordered(rows.map(normalize));
-    const sections = TERMS.map((term) => {
+    const terms = [...new Set(prepared.map((row) => row.term))];
+    const sections = terms.map((term) => {
       const items = prepared.filter((row) => row.term === term);
       if (!items.length) return "";
       const body = items.map((row) => `<tr><td class="category">${escape(row.category)}</td><td class="course">${escape(row.course)}</td><td><strong class="grade">${escape(row.grade)}</strong></td><td class="credit">${escape(row.credit)}</td></tr>`).join("");
@@ -171,13 +167,14 @@
 
   function selfTest() {
     const rows = [
+      { xn: "2023", xqm: "1", kch: "d", kcmc: "D 课", kccj: "60-77分", xf: "2", kcxzmc: "公共基础必修", skjs: "004/丁/讲师", ksxzmc: "正常考试" },
       { xn: "2025", xqm: "2", kch: "b", kcmc: "B 课", kccj: "90-100分", xf: "2", kcxzmc: "专业教育必修", skjs: "001/乙/教授", ksxzmc: "正常考试" },
       { xn: "2024", xqm: "2", kch: "a", kcmc: "A 课", kccj: "78-89分", xf: "3", kcxzmc: "公共基础必修", skjs: "002/甲/讲师", ksxzmc: "正常考试" },
       { xn: "2024", xqm: "2", kch: "c", kcmc: "C 课", kccj: "90-100分", xf: "2", kcxzmc: "专业教育必修", skjs: "003/丙/讲师", ksxzmc: "正常考试" },
     ];
     const sorted = ordered(rows.map(normalize));
     const html = reportHtml(rows);
-    if (!(sorted[0].term === "2024-2025学年第二学期" && sorted[0].category === "公共基础必修" && sorted[1].category === "专业教育必修" && html.includes("<h1>成绩单</h1>") && html.includes("课程性质") && html.includes("教师与考试性质") && !html.includes("main::before") && !html.includes("课程号"))) throw new Error("成绩导出自检失败");
+    if (!(sorted[0].term === "2023-2024学年第一学期" && sorted[1].category === "公共基础必修" && sorted[2].category === "专业教育必修" && html.indexOf("2023-2024学年第一学期") < html.indexOf("2025-2026学年第二学期") && html.includes("<h1>成绩单</h1>") && html.includes("课程性质") && html.includes("教师与考试性质") && !html.includes("main::before") && !html.includes("课程号"))) throw new Error("成绩导出自检失败");
   }
 
   if (typeof window === "undefined") return selfTest();
