@@ -17,10 +17,11 @@
 ### 📥 安装与使用
 1. 在浏览器中安装 [Tampermonkey](https://www.tampermonkey.net/) 扩展
 2. 安装本脚本：[whu-grade-export.user.js](tampermonkey/whu-grade-export.user.js)
-3. 打开 [武汉大学专业发展系统](http://zyfzzd.whu.edu.cn/)，进入 **学生画像 → 学业情况** 页面
+3. 打开 [武汉大学-智慧珞珈-专业发展系统](http://zyfzzd.whu.edu.cn/)，进入 **学生画像 → 学业情况** 页面
 4. 刷新页面，右下角会出现 **“导出成绩”** 按钮
 5. 点击按钮，选择保存位置即可导出 HTML 成绩单
 
 ### 📄 脚本说明
 - 类型：Tampermonkey 用户脚本
 - 功能：爬取当前课程成绩信息，生成格式化的成绩单并导出
+# WHU-Practical-Tool
